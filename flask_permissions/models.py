@@ -6,6 +6,7 @@ except ImportError:
         'Permissions app must be initialized before importing models')
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import Column
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -28,18 +29,18 @@ def make_user_role_table(table_name='user', id_column_name='id'):
     """
 
     return db.Table('fp_user_role',
-                       db.Column(
+                       Column(
                            'user_id', db.Integer, db.ForeignKey('{}.{}'.format(
                                table_name, id_column_name))),
-                       db.Column(
+                       Column(
                        'role_id', db.Integer, db.ForeignKey('fp_role.id')),
                        extend_existing=True)
 
 
 role_ability_table = db.Table('fp_role_ability',
-                              db.Column(
+                              Column(
                                   'role_id', db.Integer, db.ForeignKey('fp_role.id')),
-                              db.Column(
+                              Column(
                               'ability_id', db.Integer, db.ForeignKey('fp_ability.id'))
                               )
 
@@ -50,8 +51,8 @@ class Role(db.Model):
     Subclass this for your roles
     """
     __tablename__ = 'fp_role'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True)
+    id = Column(db.Integer, primary_key=True)
+    name = Column(db.String(120), unique=True)
     abilities = db.relationship(
         'Ability', secondary=role_ability_table, backref='roles')
 
