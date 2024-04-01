@@ -1,10 +1,10 @@
 from functools import wraps
-from werkzeug.exceptions import Forbidden
+from flask import abort
 
 
 def import_user():
     try:
-        from flask.ext.login import current_user
+        from flask_login import current_user
         return current_user
     except ImportError:
         raise ImportError(
@@ -23,12 +23,14 @@ def user_has(ability, get_user=import_user):
                 name=ability).first()
             user_abilities = []
             current_user = get_user()
+            if not current_user.is_authenticated:
+                abort(401)
             for role in current_user._roles:
                 user_abilities += role.abilities
             if desired_ability in user_abilities:
                 return func(*args, **kwargs)
             else:
-                raise Forbidden("You do not have access")
+                abort(401)
         return inner
     return wrapper
 
@@ -42,8 +44,12 @@ def user_is(role, get_user=import_user):
         def inner(*args, **kwargs):
             from .models import Role
             current_user = get_user()
-            if role in current_user.roles:
+            # if not logged in return unauthorized
+            if not current_user.is_authenticated:
+                abort(401)
+            elif role in current_user.roles:
                 return func(*args, **kwargs)
-            raise Forbidden("You do not have access")
+            else:
+                abort(401)
         return inner
     return wrapper
